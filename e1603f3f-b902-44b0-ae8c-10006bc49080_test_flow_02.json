@@ -1,0 +1,74 @@
+{
+  "type": "Microsoft.Logic/workflows",
+  "location": "eastus",
+  "properties": {
+    "state": "Enabled",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "Recurrence": {
+          "recurrence": {
+            "frequency": "Day",
+            "interval": 3
+          },
+          "type": "Recurrence"
+        }
+      },
+      "actions": {
+        "Create_blob": {
+          "runAfter": {
+            "Current_time": [
+              "Succeeded"
+            ]
+          },
+          "type": "ApiConnection",
+          "inputs": {
+            "body": "The time when this was run is @{body('Current_time')}",
+            "host": {
+              "connection": {
+                "name": "@parameters('$connections')['<<azure_blob_name>>']['connectionId']"
+              }
+            },
+            "method": "post",
+            "path": "/datasets/default/files",
+            "queries": {
+              "folderPath": "/<<container_name>>",
+              "name": "<<file_name>>",
+              "queryParametersSingleEncoded": true
+            }
+          },
+          "runtimeConfiguration": {
+            "contentTransfer": {
+              "transferMode": "Chunked"
+            }
+          }
+        },
+        "Current_time": {
+          "runAfter": {},
+          "type": "Expression",
+          "kind": "CurrentTime",
+          "inputs": {}
+        }
+      },
+      "outputs": {}
+    },
+    "parameters": {
+      "$connections": {
+        "value": {
+          "<<azure_blob_name>>": {
+            "connectionId": "/subscriptions/<<subscription_id>>/resourceGroups/<<Resource_Group_Name>>/providers/Microsoft.Web/connections/<<azure_blob_name>>",
+            "connectionName": "<<azure_blob_name>>",
+            "id": "/subscriptions/<<subscription_id>>/providers/Microsoft.Web/locations/eastus/managedApis/azureblob"
+          }
+        }
+      }
+    }
+  }
+}
